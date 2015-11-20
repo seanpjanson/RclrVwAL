@@ -13,13 +13,14 @@ package com.spjanson.rclrvwal;
  **/
 
 import android.content.ContentValues;
+import android.content.Context;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class CRUD {
+public class CrudAL {
   static final String COL_TITL = "titl";
   static ContentValues contVals(String name) {
     ContentValues values = new ContentValues();
@@ -30,17 +31,18 @@ public class CRUD {
 
   private List<ContentValues> mNames;
 
-  CRUD() {mNames = new ArrayList<>();}
+  CrudAL(Context ctx, String name) {
+    mNames = new ArrayList<>();
+  }
 
   int create(ContentValues vls) {
     if (!mNames.contains(vls)) try {
       mNames.add(vls);
-
+      sort();
       return mNames.indexOf(vls);
     } catch (Exception ignore) {}
     return -1;
   }
-
   ContentValues read(int pos) {
     ContentValues cv = null;
     try {
@@ -59,7 +61,6 @@ public class CRUD {
     } catch (Exception ignore) {}
     return -1;
   }
-
   boolean delete(int pos) {
     try {
       return mNames.remove(pos) != null;

@@ -27,13 +27,15 @@ import android.widget.TextView;
 public class ListAdptr extends RecyclerView.Adapter<ListAdptr.ViewHldr> {
   private Activity mAct;
   private LinearLayoutManager mLLMMgr;
-  private CRUD mNames;
+  //private CrudAL mLst;  // ArrayList implementation
+  private CrudDB mLst;  // SQLiteTable implementation
   private int mPos = -1;
   private View mSelVw;
 
   ListAdptr(final Activity act, RecyclerView recVw) {
     mAct = act;
-    mNames = new CRUD();
+    //mLst = new CrudAL(mAct, null);
+    mLst = new CrudDB(mAct, null);
     mLLMMgr = new LinearLayoutManager(mAct, LinearLayoutManager.VERTICAL, false);
     recVw.setAdapter(this);
     recVw.setLayoutManager(mLLMMgr);
@@ -72,9 +74,9 @@ public class ListAdptr extends RecyclerView.Adapter<ListAdptr.ViewHldr> {
   }
   @Override
   public void onBindViewHolder(ViewHldr hldr, int pos) {
-    ContentValues cv = mNames.read(pos);
+    ContentValues cv = mLst.read(pos);
     if (cv == null) return; //-------->>>
-    String name = cv.getAsString(CRUD.COL_TITL);
+    String name = cv.getAsString(CrudAL.COL_TITL);
     if (name == null) return; //-------->>>
     hldr.setItemName(name);
     if (pos == mPos) {
@@ -84,10 +86,10 @@ public class ListAdptr extends RecyclerView.Adapter<ListAdptr.ViewHldr> {
     }
   }
   @Override
-  public int getItemCount() { return mNames == null ? 0 : mNames.size(); }
+  public int getItemCount() { return mLst == null ? 0 : mLst.size(); }
 
   int addItem(String name) {
-    int pos = mNames.create(CRUD.contVals(name));
+    int pos = mLst.create(CrudAL.contVals(name));
     if (pos < 0) return -1;  //---------------->>>
     mSelVw = clear(mSelVw);
     mPos = pos;
@@ -103,12 +105,12 @@ public class ListAdptr extends RecyclerView.Adapter<ListAdptr.ViewHldr> {
       if (!select(mPos + 1))
         select(mPos -= 1);
     }
-    mNames.delete(pos);
+    mLst.delete(pos);
     notifyItemRemoved(pos);
   }
   boolean updItem(String oldName, String newName) {
-    if (oldName.compareTo(newName) == 0) return false;  //----------->>>
-    int pos = mNames.update(oldName, newName);
+    if (oldName.equals(newName)) return false;  //----------->>>
+    int pos = mLst.update(oldName, newName);
     if (pos < 0) return false; //------------------>>>
     mPos = pos;
     mLLMMgr.scrollToPosition(mPos);
@@ -130,7 +132,7 @@ public class ListAdptr extends RecyclerView.Adapter<ListAdptr.ViewHldr> {
     return false;
   }
   private boolean select(int pos) {
-    return pos >= 0 && pos < mNames.size() && select(mLLMMgr.findViewByPosition(pos));
+    return pos >= 0 && pos < mLst.size() && select(mLLMMgr.findViewByPosition(pos));
   }
 
   class ViewHldr extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
@@ -149,7 +151,7 @@ public class ListAdptr extends RecyclerView.Adapter<ListAdptr.ViewHldr> {
     @Override
     public void onClick(View v) {
       int pos = getAdapterPosition();
-      if (pos < 0 || pos >= mNames.size()) return;
+      if (pos < 0 || pos >= mLst.size()) return;
       if (!itemView.isSelected()) {   //SELECT
         mSelVw = clear(mSelVw);
         select(mPos = pos);
